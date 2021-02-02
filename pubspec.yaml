@@ -5,8 +5,10 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^0.1.3
+  font_awesome_flutter: ^8.11.0
   uuid: ^2.0.4
   intl: ^0.16.1
+  timeline_list: ^0.0.3
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -4,6 +4,7 @@ import 'package:todo/DummyData.dart';
 import 'package:todo/CustomIcons.dart';
 import 'package:todo/objects/TodoObject.dart';
 import 'package:todo/pages/Details.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);
@@ -73,17 +74,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(10.0),
                 topRight: Radius.circular(10.0),
               ),
               child: BottomAppBar(
                   child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  IconButton(
-                    icon: Icon(CustomIcons.menu),
-                    onPressed: () {},
-                  ),
                   IconButton(
                     icon: Icon(CustomIcons.menu),
                     onPressed: () {},
@@ -95,27 +91,34 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ],
               )),
             )),
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0.0,
-          title: Text("TODO"),
-          centerTitle: true,
-          leading: IconButton(
-            icon: Icon(CustomIcons.menu),
-            onPressed: () {},
-          ),
-          actions: <Widget>[
-            IconButton(
-              icon: Icon(
-                CustomIcons.search,
-                size: 26.0,
-              ),
-              onPressed: () {},
-            )
-          ],
-        ),
+        appBar: PreferredSize(
+            preferredSize: Size.fromHeight(50),
+            child: Padding(
+              padding: EdgeInsets.all(5),
+              child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(30),
+                        bottomRight: Radius.circular(30)),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black38,
+                          spreadRadius: 0,
+                          blurRadius: 10),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(5.0),
+                    ),
+                    child: AppBar(
+                      backgroundColor: Colors.white,
+                      centerTitle: true,
+                    ),
+                  )),
+            )),
         body: GridView.builder(
-          padding: EdgeInsets.only(left: 10.0, right: 10.0),
+          padding: EdgeInsets.only(left: 5.0, right: 5.0),
           scrollDirection: Axis.vertical,
           physics: _CustomScrollPhysics(),
           controller: scrollController,
