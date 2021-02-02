@@ -10,7 +10,7 @@ class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);
 
   @override
-  _HomePageState createState() => _HomePageState();
+  _HomePageState createState() => _HomePageState(tabs: todos);
 }
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
@@ -21,30 +21,34 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   int currentPage = 0;
   Color constBackColor;
 
+  List<TodoObject> tabs;
+
+  _HomePageState({this.tabs});
+
   @override
   void initState() {
     super.initState();
-    colorTween = ColorTween(begin: todos[0].color, end: todos[0].color);
-    backgroundColor = todos[0].color;
-    backgroundGradient = todos[0].gradient;
+    colorTween = ColorTween(begin: tabs[0].color, end: tabs[0].color);
+    backgroundColor = tabs[0].color;
+    backgroundGradient = tabs[0].gradient;
     scrollController = ScrollController();
     scrollController.addListener(() {
       ScrollPosition position = scrollController.position;
 //      ScrollDirection direction = position.userScrollDirection;
       int page = position.pixels ~/
-          (position.maxScrollExtent / (todos.length.toDouble() - 1));
+          (position.maxScrollExtent / (tabs.length.toDouble() - 1));
       double pageDo = (position.pixels /
-          (position.maxScrollExtent / (todos.length.toDouble() - 1)));
+          (position.maxScrollExtent / (tabs.length.toDouble() - 1)));
       double percent = pageDo - page;
-      if (todos.length - 1 < page + 1) {
+      if (tabs.length - 1 < page + 1) {
         return;
       }
-      colorTween.begin = todos[page].color;
-      colorTween.end = todos[page + 1].color;
+      colorTween.begin = tabs[page].color;
+      colorTween.end = tabs[page + 1].color;
       setState(() {
         backgroundColor = colorTween.transform(percent);
         backgroundGradient =
-            todos[page].gradient.lerpTo(todos[page + 1].gradient, percent);
+            tabs[page].gradient.lerpTo(tabs[page + 1].gradient, percent);
       });
     });
   }
@@ -53,6 +57,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void dispose() {
     super.dispose();
     scrollController.dispose();
+  }
+
+  void removeTab(index) {
+    setState(() {
+      tabs.remove(index);
+    });
   }
 
   @override
@@ -92,9 +102,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               )),
             )),
         appBar: PreferredSize(
-            preferredSize: Size.fromHeight(50),
+            preferredSize: Size.fromHeight(60),
             child: Padding(
-              padding: EdgeInsets.all(5),
+              padding: EdgeInsets.only(bottom: 10),
               child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.only(
@@ -108,9 +118,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     ],
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(5.0),
-                    ),
+                    borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(10),
+                        bottomRight: Radius.circular(10)),
                     child: AppBar(
                       backgroundColor: Colors.white,
                       centerTitle: true,
@@ -126,191 +136,223 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           itemCount: 6,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2, crossAxisSpacing: 10.0, mainAxisSpacing: 10.0),
-          itemBuilder: (context, index) {
-            TodoObject todoObject = todos[index];
-            double percentComplete = todoObject.percentComplete();
+          itemBuilder: tabBuilder,
+        ),
+      ),
+    );
+  }
 
-            return InkWell(
-              onTap: () {
-                Navigator.of(context).push(
-                  PageRouteBuilder(
-                    pageBuilder: (BuildContext context,
-                            Animation<double> animation,
-                            Animation<double> secondaryAnimation) =>
-                        DetailPage(todoObject: todoObject),
-                    transitionDuration: Duration(milliseconds: 1000),
-                  ),
-                );
-              },
+  Widget tabBuilder(context, index) {
+    TodoObject tab = tabs[index];
+    double percentComplete = tab.percentComplete();
+
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).push(
+          PageRouteBuilder(
+            pageBuilder: (BuildContext context, Animation<double> animation,
+                    Animation<double> secondaryAnimation) =>
+                DetailPage(todoObject: tab),
+            transitionDuration: Duration(milliseconds: 1000),
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10.0),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withAlpha(70),
+                  offset: Offset(3.0, 10.0),
+                  blurRadius: 15.0)
+            ]),
+        height: 250.0,
+        child: Stack(
+          children: <Widget>[
+            Hero(
+              tag: tab.uuid + "_background",
               child: Container(
                 decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10.0),
-                    boxShadow: [
-                      BoxShadow(
-                          color: Colors.black.withAlpha(70),
-                          offset: Offset(3.0, 10.0),
-                          blurRadius: 15.0)
-                    ]),
-                height: 250.0,
-                child: Stack(
-                  children: <Widget>[
-                    Hero(
-                      tag: todoObject.uuid + "_background",
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10.0),
-                        ),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  TabContent(tab: tab, removeTabCallback: removeTab),
+                  Hero(
+                    tag: tab.uuid + "_number_of_tasks",
+                    child: Material(
+                        color: Colors.transparent,
+                        child: Text(
+                          tab.taskAmount().toString() + " Tasks",
+                          style: TextStyle(),
+                          softWrap: false,
+                        )),
+                  ),
+                  Spacer(),
+                  Hero(
+                    tag: tab.uuid + "_title",
+                    child: Material(
+                      color: Colors.transparent,
+                      child: Text(
+                        tab.title,
+                        style: TextStyle(fontSize: 30.0),
+                        softWrap: false,
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.max,
-                        mainAxisAlignment: MainAxisAlignment.center,
+                  ),
+                  Spacer(),
+                  Hero(
+                    tag: tab.uuid + "_progress_bar",
+                    child: Material(
+                      color: Colors.transparent,
+                      child: Row(
                         children: <Widget>[
                           Expanded(
-                            flex: 10,
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Stack(
-                                  children: <Widget>[
-                                    Hero(
-                                      tag: todoObject.uuid + "_backIcon",
-                                      child: Material(
-                                        type: MaterialType.transparency,
-                                        child: Container(
-                                          height: 0,
-                                          width: 0,
-                                          child: IconButton(
-                                            icon: Icon(Icons.arrow_back),
-                                            onPressed: null,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Hero(
-                                      tag: todoObject.uuid + "_icon",
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                              color: Colors.grey.withAlpha(70),
-                                              style: BorderStyle.solid,
-                                              width: 1.0),
-                                        ),
-                                        child: Padding(
-                                          padding: EdgeInsets.all(8.0),
-                                          child: Icon(todoObject.icon,
-                                              color: todoObject.color),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Spacer(),
-                                Hero(
-                                  tag: todoObject.uuid + "_more_vert",
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    type: MaterialType.transparency,
-                                    child: PopupMenuButton(
-                                      icon: Icon(
-                                        Icons.more_vert,
-                                        color: Colors.grey,
-                                      ),
-                                      itemBuilder: (context) =>
-                                          <PopupMenuEntry<TodoCardSettings>>[
-                                        PopupMenuItem(
-                                          child: Text("Edit Color"),
-                                          value: TodoCardSettings.edit_color,
-                                        ),
-                                        PopupMenuItem(
-                                          child: Text("Delete"),
-                                          value: TodoCardSettings.delete,
-                                        ),
-                                      ],
-                                      onSelected: (setting) {
-                                        switch (setting) {
-                                          case TodoCardSettings.edit_color:
-                                            print("edit color clicked");
-                                            break;
-                                          case TodoCardSettings.delete:
-                                            print("delete clicked");
-                                            setState(() {
-                                              todos.remove(todoObject);
-                                            });
-                                            break;
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            child: LinearProgressIndicator(
+                              value: percentComplete,
+                              backgroundColor: Colors.grey.withAlpha(50),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(tab.color),
                             ),
                           ),
-                          Hero(
-                            tag: todoObject.uuid + "_number_of_tasks",
-                            child: Material(
-                                color: Colors.transparent,
-                                child: Text(
-                                  todoObject.taskAmount().toString() + " Tasks",
-                                  style: TextStyle(),
-                                  softWrap: false,
-                                )),
-                          ),
-                          Spacer(),
-                          Hero(
-                            tag: todoObject.uuid + "_title",
-                            child: Material(
-                              color: Colors.transparent,
-                              child: Text(
-                                todoObject.title,
-                                style: TextStyle(fontSize: 30.0),
-                                softWrap: false,
-                              ),
-                            ),
-                          ),
-                          Spacer(),
-                          Hero(
-                            tag: todoObject.uuid + "_progress_bar",
-                            child: Material(
-                              color: Colors.transparent,
-                              child: Row(
-                                children: <Widget>[
-                                  Expanded(
-                                    child: LinearProgressIndicator(
-                                      value: percentComplete,
-                                      backgroundColor:
-                                          Colors.grey.withAlpha(50),
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          todoObject.color),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsets.only(left: 5.0),
-                                    child: Text((percentComplete * 100)
-                                            .round()
-                                            .toString() +
-                                        "%"),
-                                  )
-                                ],
-                              ),
-                            ),
-                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 5.0),
+                            child: Text(
+                                (percentComplete * 100).round().toString() +
+                                    "%"),
+                          )
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            );
-          },
+            ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+class TabContent extends StatelessWidget {
+  const TabContent({
+    Key key,
+    @required this.tab,
+    @required this.removeTabCallback,
+  }) : super(key: key);
+
+  final void Function(int) removeTabCallback;
+  final TodoObject tab;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      flex: 10,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          TabPage(todoObject: tab),
+          Spacer(),
+          Hero(
+            tag: tab.uuid + "_more_vert",
+            child: Material(
+              color: Colors.transparent,
+              type: MaterialType.transparency,
+              child: PopupMenuButton(
+                icon: Icon(
+                  Icons.more_vert,
+                  color: Colors.grey,
+                ),
+                itemBuilder: popUpMenuBuilder,
+                onSelected: (setting) {
+                  tabPopUpMenuOptions(setting, tab);
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<PopupMenuEntry<TodoCardSettings>> popUpMenuBuilder(context) =>
+      <PopupMenuEntry<TodoCardSettings>>[
+        PopupMenuItem(
+          child: Text("Edit Color"),
+          value: TodoCardSettings.edit_color,
+        ),
+        PopupMenuItem(
+          child: Text("Delete"),
+          value: TodoCardSettings.delete,
+        ),
+      ];
+
+  void tabPopUpMenuOptions(setting, tab) {
+    switch (setting) {
+      case TodoCardSettings.edit_color:
+        print("edit color clicked");
+        break;
+      case TodoCardSettings.delete:
+        print("delete clicked");
+        removeTabCallback(tab.uuid);
+        break;
+    }
+  }
+}
+
+class TabPage extends StatelessWidget {
+  const TabPage({
+    Key key,
+    @required this.todoObject,
+  }) : super(key: key);
+
+  final TodoObject todoObject;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: <Widget>[
+        Hero(
+          tag: todoObject.uuid + "_backIcon",
+          child: Material(
+            type: MaterialType.transparency,
+            child: Container(
+              height: 0,
+              width: 0,
+              child: IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: null,
+              ),
+            ),
+          ),
+        ),
+        Hero(
+          tag: todoObject.uuid + "_icon",
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              border: Border.all(
+                  color: Colors.grey.withAlpha(70),
+                  style: BorderStyle.solid,
+                  width: 1.0),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Icon(todoObject.icon, color: todoObject.color),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
