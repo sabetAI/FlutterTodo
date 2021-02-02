@@ -195,9 +195,8 @@ class TabBox extends StatelessWidget {
   final double percentComplete;
   final void Function(TabData) removeTabCallback;
 
-  List<Widget> buildTabContent() {
+  List<Widget> buildTabBody() {
     return <Widget>[
-      TabContent(tab: tab, removeTabCallback: removeTabCallback),
       Hero(
         tag: tab.uuid + "_number_of_tasks",
         child: Material(
@@ -229,19 +228,20 @@ class TabBox extends StatelessWidget {
             children: <Widget>[
               Expanded(
                 child: LinearProgressIndicator(
-                  value: percentComplete,
+                  value: tab.percentComplete(),
                   backgroundColor: Colors.grey.withAlpha(50),
                   valueColor: AlwaysStoppedAnimation<Color>(tab.color),
                 ),
               ),
               Padding(
                 padding: EdgeInsets.only(left: 5.0),
-                child: Text((percentComplete * 100).round().toString() + "%"),
+                child: Text(
+                    (tab.percentComplete() * 100).round().toString() + "%"),
               )
             ],
           ),
         ),
-      ),
+      )
     ];
   }
 
@@ -270,17 +270,20 @@ class TabBox extends StatelessWidget {
           Padding(
               padding: EdgeInsets.all(16.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: buildTabContent(),
-              ))
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                        TabHeader(
+                            tab: tab, removeTabCallback: removeTabCallback)
+                      ] +
+                      buildTabBody()))
         ]));
   }
 }
 
-class TabContent extends StatelessWidget {
-  const TabContent({
+class TabHeader extends StatelessWidget {
+  const TabHeader({
     Key key,
     @required this.tab,
     @required this.removeTabCallback,
