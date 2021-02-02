@@ -21,7 +21,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   int currentPage = 0;
   Color constBackColor;
 
-  List<TodoObject> tabs;
+  List<TabData> tabs;
 
   _HomePageState({this.tabs});
 
@@ -59,9 +59,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     scrollController.dispose();
   }
 
-  void removeTab(index) {
+  void removeTab(TabData tab) {
     setState(() {
-      tabs.remove(index);
+      tabs.where((e) => e.uuid != tab.uuid).toList();
     });
   }
 
@@ -73,60 +73,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       decoration: BoxDecoration(gradient: backgroundGradient),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        bottomNavigationBar: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(30), topLeft: Radius.circular(30)),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black38, spreadRadius: 0, blurRadius: 10),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(10.0),
-              ),
-              child: BottomAppBar(
-                  child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  IconButton(
-                    icon: Icon(CustomIcons.menu),
-                    onPressed: () {},
-                  ),
-                  IconButton(
-                    icon: Icon(CustomIcons.search),
-                    onPressed: () {},
-                  )
-                ],
-              )),
-            )),
-        appBar: PreferredSize(
-            preferredSize: Size.fromHeight(60),
-            child: Padding(
-              padding: EdgeInsets.only(bottom: 10),
-              child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(30),
-                        bottomRight: Radius.circular(30)),
-                    boxShadow: [
-                      BoxShadow(
-                          color: Colors.black38,
-                          spreadRadius: 0,
-                          blurRadius: 10),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(10),
-                        bottomRight: Radius.circular(10)),
-                    child: AppBar(
-                      backgroundColor: Colors.white,
-                      centerTitle: true,
-                    ),
-                  )),
-            )),
+        bottomNavigationBar: BottomNavBar(),
+        appBar:
+            PreferredSize(preferredSize: Size.fromHeight(60), child: TopBar()),
         body: GridView.builder(
           padding: EdgeInsets.only(left: 5.0, right: 5.0),
           scrollDirection: Axis.vertical,
@@ -143,7 +92,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget tabBuilder(context, index) {
-    TodoObject tab = tabs[index];
+    TabData tab = tabs[index];
     double percentComplete = tab.percentComplete();
 
     return InkWell(
@@ -157,7 +106,148 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
         );
       },
+      child: TabBox(
+        tab: tab,
+        percentComplete: percentComplete,
+        removeTabCallback: removeTab,
+      ),
+    );
+  }
+}
+
+class TopBar extends StatelessWidget {
+  const TopBar({
+    Key key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 10),
       child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(30),
+                bottomRight: Radius.circular(30)),
+            boxShadow: [
+              BoxShadow(color: Colors.black38, spreadRadius: 0, blurRadius: 10),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(10),
+                bottomRight: Radius.circular(10)),
+            child: AppBar(
+              backgroundColor: Colors.white,
+              centerTitle: true,
+            ),
+          )),
+    );
+  }
+}
+
+class BottomNavBar extends StatelessWidget {
+  const BottomNavBar({
+    Key key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.only(
+              topRight: Radius.circular(30), topLeft: Radius.circular(30)),
+          boxShadow: [
+            BoxShadow(color: Colors.black38, spreadRadius: 0, blurRadius: 10),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.only(
+            topRight: Radius.circular(10.0),
+          ),
+          child: BottomAppBar(
+              child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                icon: Icon(CustomIcons.menu),
+                onPressed: () {},
+              ),
+              IconButton(
+                icon: Icon(CustomIcons.search),
+                onPressed: () {},
+              )
+            ],
+          )),
+        ));
+  }
+}
+
+class TabBox extends StatelessWidget {
+  const TabBox({
+    Key key,
+    @required this.tab,
+    @required this.percentComplete,
+    @required this.removeTabCallback,
+  }) : super(key: key);
+
+  final TabData tab;
+  final double percentComplete;
+  final void Function(TabData) removeTabCallback;
+
+  List<Widget> buildTabContent() {
+    return <Widget>[
+      TabContent(tab: tab, removeTabCallback: removeTabCallback),
+      Hero(
+        tag: tab.uuid + "_number_of_tasks",
+        child: Material(
+            color: Colors.transparent,
+            child: Text(
+              tab.taskAmount().toString() + " Tasks",
+              style: TextStyle(),
+              softWrap: false,
+            )),
+      ),
+      Spacer(),
+      Hero(
+        tag: tab.uuid + "_title",
+        child: Material(
+          color: Colors.transparent,
+          child: Text(
+            tab.title,
+            style: TextStyle(fontSize: 30.0),
+            softWrap: false,
+          ),
+        ),
+      ),
+      Spacer(),
+      Hero(
+        tag: tab.uuid + "_progress_bar",
+        child: Material(
+          color: Colors.transparent,
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: LinearProgressIndicator(
+                  value: percentComplete,
+                  backgroundColor: Colors.grey.withAlpha(50),
+                  valueColor: AlwaysStoppedAnimation<Color>(tab.color),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 5.0),
+                child: Text((percentComplete * 100).round().toString() + "%"),
+              )
+            ],
+          ),
+        ),
+      ),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10.0),
             boxShadow: [
@@ -167,79 +257,25 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   blurRadius: 15.0)
             ]),
         height: 250.0,
-        child: Stack(
-          children: <Widget>[
-            Hero(
-              tag: tab.uuid + "_background",
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
+        child: Stack(children: <Widget>[
+          Hero(
+            tag: tab.uuid + "_background",
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10.0),
               ),
             ),
-            Padding(
+          ),
+          Padding(
               padding: EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  TabContent(tab: tab, removeTabCallback: removeTab),
-                  Hero(
-                    tag: tab.uuid + "_number_of_tasks",
-                    child: Material(
-                        color: Colors.transparent,
-                        child: Text(
-                          tab.taskAmount().toString() + " Tasks",
-                          style: TextStyle(),
-                          softWrap: false,
-                        )),
-                  ),
-                  Spacer(),
-                  Hero(
-                    tag: tab.uuid + "_title",
-                    child: Material(
-                      color: Colors.transparent,
-                      child: Text(
-                        tab.title,
-                        style: TextStyle(fontSize: 30.0),
-                        softWrap: false,
-                      ),
-                    ),
-                  ),
-                  Spacer(),
-                  Hero(
-                    tag: tab.uuid + "_progress_bar",
-                    child: Material(
-                      color: Colors.transparent,
-                      child: Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: LinearProgressIndicator(
-                              value: percentComplete,
-                              backgroundColor: Colors.grey.withAlpha(50),
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(tab.color),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(left: 5.0),
-                            child: Text(
-                                (percentComplete * 100).round().toString() +
-                                    "%"),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+                children: buildTabContent(),
+              ))
+        ]));
   }
 }
 
@@ -250,8 +286,8 @@ class TabContent extends StatelessWidget {
     @required this.removeTabCallback,
   }) : super(key: key);
 
-  final void Function(int) removeTabCallback;
-  final TodoObject tab;
+  final void Function(TabData) removeTabCallback;
+  final TabData tab;
 
   @override
   Widget build(BuildContext context) {
@@ -296,7 +332,7 @@ class TabContent extends StatelessWidget {
         ),
       ];
 
-  void tabPopUpMenuOptions(setting, tab) {
+  void tabPopUpMenuOptions(TodoCardSettings setting, tab) {
     switch (setting) {
       case TodoCardSettings.edit_color:
         print("edit color clicked");
@@ -315,7 +351,7 @@ class TabPage extends StatelessWidget {
     @required this.todoObject,
   }) : super(key: key);
 
-  final TodoObject todoObject;
+  final TabData todoObject;
 
   @override
   Widget build(BuildContext context) {
@@ -326,7 +362,7 @@ class TabPage extends StatelessWidget {
           child: Material(
             type: MaterialType.transparency,
             child: Container(
-              height: 0,
+              height: 10,
               width: 0,
               child: IconButton(
                 icon: Icon(Icons.arrow_back),

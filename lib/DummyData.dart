@@ -2,8 +2,8 @@ import 'package:todo/objects/ColorChoice.dart';
 import 'package:todo/objects/TodoObject.dart';
 import 'package:flutter/material.dart';
 
-List<TodoObject> todos = [
-  TodoObject.import(
+List<TabData> todos = [
+  TabData.import(
       "SOME_RANDOM_UUID", "Custom", 1, ColorChoices.choices[0], Icons.alarm, {
     DateTime(2018, 5, 3): [
       TaskObject("Meet Clients", DateTime(2018, 5, 3)),
@@ -18,9 +18,9 @@ List<TodoObject> todos = [
       TaskObject("HTML/CSS Study", DateTime(2019, 5, 4)),
     ]
   }),
-  TodoObject("Personal", Icons.person),
-  TodoObject("Work", Icons.work),
-  TodoObject("Home", Icons.home),
-  TodoObject("Shopping", Icons.shopping_basket),
-  TodoObject("School", Icons.school),
+  TabData("Personal", Icons.person),
+  TabData("Work", Icons.work),
+  TabData("Home", Icons.home),
+  TabData("Shopping", Icons.shopping_basket),
+  TabData("School", Icons.school),
 ];

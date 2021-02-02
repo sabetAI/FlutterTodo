@@ -6,7 +6,7 @@ import 'package:todo/CustomCheckboxTile.dart';
 class DetailPage extends StatefulWidget {
   DetailPage({@required this.todoObject, Key key}) : super(key: key);
 
-  final TodoObject todoObject;
+  final TabData todoObject;
 
   @override
   _DetailPageState createState() => _DetailPageState();
@@ -21,16 +21,21 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin {
 
   @override
   void initState() {
-    scaleAnimation = AnimationController(vsync: this, duration: Duration(milliseconds: 1000), lowerBound: 0.0, upperBound: 1.0);
+    scaleAnimation = AnimationController(
+        vsync: this,
+        duration: Duration(milliseconds: 1000),
+        lowerBound: 0.0,
+        upperBound: 1.0);
 
     percentComplete = widget.todoObject.percentComplete();
     barPercent = percentComplete;
-    animationBar = AnimationController(vsync: this, duration: Duration(milliseconds: 100))
-      ..addListener(() {
-        setState(() {
-          barPercent = animT.transform(animationBar.value);
-        });
-      });
+    animationBar =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 100))
+          ..addListener(() {
+            setState(() {
+              barPercent = animT.transform(animationBar.value);
+            });
+          });
     animT = Tween<double>(begin: percentComplete, end: percentComplete);
     scaleAnimation.forward();
     super.initState();
@@ -45,7 +50,8 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin {
 
   void updateBarPercent() async {
     double newPercentComplete = widget.todoObject.percentComplete();
-    if (animationBar.status == AnimationStatus.forward || animationBar.status == AnimationStatus.completed) {
+    if (animationBar.status == AnimationStatus.forward ||
+        animationBar.status == AnimationStatus.completed) {
       animT.begin = newPercentComplete;
       await animationBar.reverse();
     } else {
@@ -98,7 +104,8 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin {
                       Icons.more_vert,
                       color: Colors.grey,
                     ),
-                    itemBuilder: (context) => <PopupMenuEntry<TodoCardSettings>>[
+                    itemBuilder: (context) =>
+                        <PopupMenuEntry<TodoCardSettings>>[
                       PopupMenuItem(
                         child: Text("Edit Color"),
                         value: TodoCardSettings.edit_color,
@@ -138,7 +145,10 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin {
                       child: Container(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.grey.withAlpha(70), style: BorderStyle.solid, width: 1.0),
+                          border: Border.all(
+                              color: Colors.grey.withAlpha(70),
+                              style: BorderStyle.solid,
+                              width: 1.0),
                         ),
                         child: Padding(
                           padding: EdgeInsets.all(8.0),
@@ -199,12 +209,14 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin {
                               child: LinearProgressIndicator(
                                 value: barPercent,
                                 backgroundColor: Colors.grey.withAlpha(50),
-                                valueColor: AlwaysStoppedAnimation<Color>(widget.todoObject.color),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    widget.todoObject.color),
                               ),
                             ),
                             Padding(
                               padding: EdgeInsets.only(left: 5.0),
-                              child: Text((barPercent * 100).round().toString() + "%"),
+                              child: Text(
+                                  (barPercent * 100).round().toString() + "%"),
                             )
                           ],
                         ),
@@ -224,23 +236,30 @@ class _DetailPageState extends State<DetailPage> with TickerProviderStateMixin {
                           child: ListView.builder(
                             padding: EdgeInsets.all(0.0),
                             itemBuilder: (BuildContext context, int index) {
-                              DateTime currentDate = widget.todoObject.tasks.keys.toList()[index];
+                              DateTime currentDate =
+                                  widget.todoObject.tasks.keys.toList()[index];
                               DateTime _now = DateTime.now();
-                              DateTime today = DateTime(_now.year, _now.month, _now.day);
+                              DateTime today =
+                                  DateTime(_now.year, _now.month, _now.day);
                               String dateString;
-                              if (currentDate.isBefore(today.subtract(Duration(days: 7)))) {
-                                dateString = DateFormat.yMMMMEEEEd().format(currentDate);
+                              if (currentDate.isBefore(
+                                  today.subtract(Duration(days: 7)))) {
+                                dateString =
+                                    DateFormat.yMMMMEEEEd().format(currentDate);
                               } else if (currentDate.isBefore(today)) {
-                                dateString = "Previous - " + DateFormat.E().format(currentDate);
+                                dateString = "Previous - " +
+                                    DateFormat.E().format(currentDate);
                               } else if (currentDate.isAtSameMomentAs(today)) {
                                 dateString = "Today";
-                              } else if (currentDate.isAtSameMomentAs(today.add(Duration(days: 1)))) {
+                              } else if (currentDate.isAtSameMomentAs(
+                                  today.add(Duration(days: 1)))) {
                                 dateString = "Tomorrow";
                               } else {
                                 dateString = DateFormat.E().format(currentDate);
                               }
                               List<Widget> tasks = [Text(dateString)];
-                              widget.todoObject.tasks[currentDate].forEach((task) {
+                              widget.todoObject.tasks[currentDate]
+                                  .forEach((task) {
                                 tasks.add(CustomCheckboxListTile(
                                   activeColor: widget.todoObject.color,
                                   value: task.isCompleted(),
